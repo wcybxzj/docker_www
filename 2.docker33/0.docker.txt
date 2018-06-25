@@ -1,0 +1,19 @@
+使用国内的hub
+registry:官方的hub或者国内的hub
+repository:可以理解成image
+
+方法1:
+cat  /etc/docker/daemon.json 
+{
+	"registry-mirrors": ["https://registry.docker.com"]
+}
+改成
+cat  /etc/docker/daemon.json 
+{
+	"registry-mirrors": ["https://www.daocloud.io"]
+}
+
+=======================================
+
+开启机器docker
+systemctl enable docker

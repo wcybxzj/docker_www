@@ -1,0 +1,27 @@
+允许所有容器互联:允许所有容器互联:同宿主默认可以用docker0互联
+拒绝容器互联:
+允许特定容器互联:
+==============================================================
+允许所有容器互联:允许所有容器互联:同宿主默认可以用docker0互联
+容器重启后有可能ip变更,docker run 要使用link选项来解决这个问题
+docker run --link=容器名:别名 镜像 命令
+
+docker run -p 0.0.0.0:1234:80  --name web  -itd centos /bin/bash
+docker run -it  --name cct1  --link=web:web_alias centos
+
+[root@localhost ~]# docker  run -it  --name cct1  --link=web:web_alias centos
+[root@c9ab0535625c /]# ping web_alias
+PING web_alias (172.26.0.2) 56(84) bytes of data.
+64 bytes from web_alias (172.26.0.2): icmp_seq=1 ttl=64 time=0.693 ms
+64 bytes from web_alias (172.26.0.2): icmp_seq=2 ttl=64 time=0.215 ms
+
+env 看环境
+vim /etc/hosts 看hosts
+==============================================================
+拒绝容器互联:/etc/daemon.json --icc:false (没测试)
+==============================================================
+允许特定容器互联:
+/etc/daemon.json --icc:false --iptables=true (没测试)
+docker run --link=xxx:yyy
+--iptables:把你的配置写入到宿主的iptables
+==============================================================

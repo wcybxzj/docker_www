@@ -1,0 +1,49 @@
+client 和 server 在不同机器上,进行远程访问
+
+1.两台机器分别都有docker,指定不同的名字
+pc1:192.168.91.15
+cat /etc/docker/daemon.json
+{
+"registry-mirrors": ["https://www.daocloud.io"],
+"debug":true,
+"hosts": ["unix:///var/run/docker.sock","tcp://0.0.0.0:2375"],
+"labels":["name=docker_one"]
+}
+
+pc1:192.168.91.16
+cat /etc/docker/daemon.json
+{
+"registry-mirrors": ["https://www.daocloud.io"],
+"debug":true,
+"hosts": ["unix:///var/run/docker.sock","tcp://0.0.0.0:2375"],
+"labels":["name=docker_two"]
+}
+
+netstat -antp|grep 2375
+tcp6       0      0 :::2375                 :::*                    LISTEN      5162/dockerd        
+
+2.测试:
+pc2:
+curl http://192.168.91.15:2375/info|grep name
+name=docker_one
+或者
+docker -H tcp://192.168.91.15:2375 info|grep name 
+name=docker_one
+
+3.客户端可以指定一个环境变量这样docker客户端就去默认访问pc1
+pc2:
+export DOCKER_HOST="tcp://192.168.91.15:2375"
+
+docker info|grep name
+name=docker_one
+
+export DOCKER_HOST=""
+
+docker info|grep name
+name=docker_two
+===================================== ===================================== =====================================
+
+
+
+
+

@@ -1,0 +1,63 @@
+docker-compose安装:
+yum install python-devel
+pip install requests==2.18.4
+pip install docker==3.3.0
+pip install docker-compose --ignore-installed requests
+
+=========================================================================
+方法 A：自建 WordPress 容器
+mkdir docker-demo && cd docker-demo
+
+2.1:启动一个php-apache容器不存在镜像会去下载
+./php-apache.sh
+
+2.2 拷贝 WordPress 安装包
+cd /root/www/docker_www/docker-demo/html
+wget https://cn.wordpress.org/wordpress-4.9.4-zh_CN.tar.gz
+chmod -R wordpress
+
+2.3 官方的 MySQL 容器
+./mysql57.sh
+
+查看mysql之前的输出
+docker container logs -f wordpressdb
+
+2.4 定制 PHP 容器
+在原来 PHP 的 image 基础上，安装mysqli的扩展。然后，启动 Apache。
+基于这个 Dockerfile 文件，新建一个名为php_mysqli_and_apache的 image 文件。
+
+Dockerfile:
+FROM php:5.6-apache
+RUN docker-php-ext-install mysqli
+CMD apache2-foreground
+
+docker build -t php_mysqli_and_apache .
+
+2.5 两个wordpress容器连接到同一个db容器
+./wordpress1_link_mysql
+./wordpress2_link_mysql
+
+可以看到wordpress以来wordrepessdb
+docker inspect wordpress1 |grep mysql
+	"/wordpressdb:/wordpress/mysql"
+
+=========================================================================
+方法 B：Wordpress 官方镜像
+首先，新建并启动 MySQL 容器。
+./mysql57.sh
+
+使用官方wordpress镜像生成容器,去连接mysql容器
+./wordpress.sh
+
+上面命令指定wordpress容器在后台运行，导致前台看不见输出，使用下面的命令查出wordpress容器的 IP 地址。
+docker container inspect wordpress
+
+mkdir /root/docker_www/wordpress
+wget https://cn.wordpress.org/wordpress-4.9.4-zh_CN.tar.gz
+
+firefox去访问172.17.0.3
+=========================================================================
+=========================================================================
+=========================================================================
+=========================================================================
+=========================================================================

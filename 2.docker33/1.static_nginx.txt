@@ -1,0 +1,42 @@
+环境:windows-->vmware(centos7)-->docker(centos7)
+docker run -p 0.0.0.0:1234:80  --name web  -itd centos /bin/bash
+=================================================================
+docker attach web
+
+yum install -y gcc
+yum install -y vim
+yum install -y make
+
+yum install pcre-devel openssl-devel -y
+
+wget http://nginx.org/download/nginx-1.14.0.tar.gz
+
+cd nginx 
+./configure --user=nginx --group=nginx --with-http_stub_status_module --with-http_ssl_module
+make 
+make install
+
+生成用户不创建家目录 不允许登录
+useradd -s /sbin/nologin -M nginx
+
+mkdir -p  /var/www/html
+vim /usr/local/nginx/conf/nginx.conf
+
+/usr/local/nginx/sbin/nginx 启动
+ctrl+p ctrl+q
+=================================================================
+vmware:
+elinks http://127.0.0.1:1234 --dump
+curl http://127.0.0.1:1234
+
+windows: 
+chrome:192.168.91.15:1234
+
+=================================================================
+docker top web
+docker port web
+docker inspect web
+docker stop web
+docker start web
+docker exec -i -t web /bin/bash -c "/usr/local/nginx/sbin/nginx"
+

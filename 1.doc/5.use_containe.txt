@@ -1,0 +1,48 @@
+docker 客户端的命令格式:
+# Usage:  [sudo] docker [flags] [command] [arguments] ..
+docker run -i -t ubuntu /bin/bash
+
+=========================================================================
+测试1:centos7
+查询centos版本:
+docker search centos
+
+使用官方镜像:
+docker login
+
+获取centos7镜像:
+docker pull centos
+
+
+启动一个交互式的容器:
+docker run -t -i -d  --name='mycentos7' centos
+-t 表示在新容器内指定一个伪终端或终端，-i表示允许我们对容器内的 (STDIN) 进行交互。
+
+docker attach mycentos7
+
+=========================================================================
+测试2:在Docker中运行一个web应用
+docker run -d -P training/webapp python app.py
+-P 标识通知 Docker 将容器内部使用的网络端口映射到我们使用的主机上。
+我们指定了 training/web 镜像。我们创建容器的时使用这个镜像，这个镜像已经包含简单的 Python Flask web 程序
+或者
+sudo docker run -d -p 5000:5000 training/webapp python app.py
+
+查看容器网络端口映射到了本机那个port
+docker port 容器名称 容器port
+
+查看WEB应用程序日志
+docker logs -f 容器名字
+
+查看WEB应用程序容器的进程
+docker top 容器名字
+
+检查WEB应用程序
+docker inspect -f '{{ .NetworkSettings.IPAddress }}' 容器名字
+
+停止容器
+sudo docker stop nostalgic_morse
+
+删除容器
+sudo docker rm nostalgic_morse
+

@@ -1,0 +1,18 @@
+管理容器数据
+管理容器和容器间的共享数据
+
+Docker管理数据的两种主要的方法：
+数据卷
+数据卷容器
+
+数据卷:
+添加一个数据卷
+docker run命令中使用-v标识来给容器内添加一个数据卷，也可以一次docker run命令中多次使用-v标识挂载多个数据卷。
+现在我们在web容器应用中创建单个数据卷。
+docker run -d -P --name web -v /webapp training/webapp python app.py
+这会在容器内部创建一个新的卷/webapp
+
+
+挂在宿主目录为卷:
+宿主/src/webapp 映射到容器 /opt/webapp 并且只读
+sudo docker run -d -P --name web -v /src/webapp:/opt/webapp:ro training/webapp python app.py

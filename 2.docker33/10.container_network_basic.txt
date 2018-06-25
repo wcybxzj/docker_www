@@ -1,0 +1,29 @@
+yum install -y bridge-utils
+
+查看网桥设备, vethxxx 说明有2个容器挂在网桥上
+brctl show
+docker0		8000.0242bb22ef5e	no		veth3d70e1a
+										vethcf6be2b
+====================================================
+可以修改网桥:
+
+cat /etc/docker/daemon.json
+{
+    "registry-mirrors": ["https://www.daocloud.io"],
+    "debug":true,
+    "hosts": ["unix:///var/run/docker.sock","tcp://0.0.0.0:2375"],
+    "labels":["name=docker_one"],
+    "bip": "172.26.0.1/16"
+}  
+
+service docker restart
+
+docker run -d --rm --name=mynginx nginx
+
+docker inspect mynginx|grep IPAddress
+	"IPAddress": "172.26.0.2"
+
+
+====================================================
+不使用docker0,自己创建一个网桥并且还要去/etc/docker/daemon.json修改(需要研究下)
+ifconfig br0 172.15.0.1 netmask 255.255.255.0 down

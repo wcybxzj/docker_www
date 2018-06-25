@@ -1,0 +1,34 @@
+docker info
+
+------------------------------------------------------------
+docker安装位置
+ll /var/lib/docker
+
+------------------------------------------------------------
+只显示centos 仓库
+docker images centos
+
+只显示镜像id(删除所有镜像时候有用)
+docker images -q 
+------------------------------------------------------------
+docker inspect [option] container|images [container|images] ...
+------------------------------------------------------------
+docker rmi --help:
+Usage:	docker rmi [OPTIONS] IMAGE [IMAGE...]
+Remove one or more images
+Options:
+	-f, --force      Force removal of the image (即使现在有容器在用镜像)
+	--no-prune		 Do not delete untagged parents
+
+如果一个镜像有好几个tag:
+方法1:删除所有tag,最后镜像就被删除
+方法2:docker rim --no-prune 镜像id
+
+------------------------------------------------------------
+删除所有镜像
+docker rmi (docker imaegs -q)
+
+删除特定仓库的所有镜像
+docker rmi (docker imaegs centos)
+
+

@@ -1,0 +1,10 @@
+cat /etc/docker/daemon.json:
+{
+	"registry-mirrors": ["https://www.daocloud.io"],
+	"debug":true
+}
+
+service restart docker
+
+查看改变
+docker info|grep Debug

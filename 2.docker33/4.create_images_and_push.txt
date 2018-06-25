@@ -1,0 +1,13 @@
+构建镜像有2种方式:
+
+方式1:
+docker commit 通过已有容器构建镜像
+docker commit  -a '作者' -m '信息' 容器名 hub用户名/镜像名
+docker commit  -a 'ybx' -m 'new nginx' web wcybxzj/mynginx
+
+docker login
+docker push wcybxzj/mynginx
+=============================================================
+方式2:(推荐用这个方式)
+docker build  + Dockerfile构建镜像
+

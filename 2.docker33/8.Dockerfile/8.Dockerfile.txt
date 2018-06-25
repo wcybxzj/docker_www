@@ -1,0 +1,94 @@
+Dockerfile
+
+RUN有两种格式:
+shell模式:
+RUN <command>
+/bin/sh -c command
+RUN hello world
+exec模式:
+使用其他类型的shell
+RUN ["shell类型","参数1","参数2"]
+RUN ["/bin/bash","-c","echo hello"]
+===============================================
+EXPOSE port1 port2
+只是说容器内会用这些端口，端口映射还是需要手动指定
+===============================================
+CMD
+CMD有3种写法
+前2类和RUN一样
+第3类是和ENTRYPOINT搭配使用,做为ENTRYPOINT的默认参数
+CMD["参数1","参数2"]
+
+
+指定容器运行时候的默认行为,如果有RUN命令CMD就会被覆盖
+cd v1
+docker build  -t  wcybxzj/mynginx:v1 .
+docker run -p 1234:80 --name web1 -itd --rm  wcybxzj/mynginx:v1
+
+覆盖CMD:
+docker run -p 1234:80 --name web1 -itd --rm  wcybxzj/mynginx:v1  /bin/bash
+===============================================
+ENTRYPOINT
+ENTRYPOINT 不会被docker run 最后的命令覆盖
+如果想覆盖docker run --entrypoint 命令
+
+cd v2
+docker build  -t  wcybxzj/mynginx:v2 .
+docker run -p 4567:80 --name web2 -itd --rm  wcybxzj/mynginx:v2
+===============================================
+ADD
+带解压功能
+ADD <源路径>... <目标路径>
+ADD ["<源路径1>",... "<目标路径>"]  用于路径有空格
+
+===============================================
+COPY
+COPY <源路径>... <目标路径>
+COPY ["<源路径1>",... "<目标路径>"]  用于路径有空格
+普通复制时候推荐用这个
+cd v1
+docker build  -t  wcybxzj/mynginx:v1 .
+docker run -p 1234:80 --name web1 -itd --rm  wcybxzj/mynginx:v1
+
+elinks --dump http://127.0.0.1:1234
+   this is frrom CPOY command index.html
+===============================================
+VOLUME
+1个VOLUME可以对应多个容器
+VOLUME ["/data"]
+===============================================
+WORKDIR
+设置工作目录,要用绝对路径
+ENTRYPOINT或者CMD指定的目录都会在这个目录执行
+===============================================
+ENV
+设置环境变量
+ENV <key><value>
+ENV <key>=<value>
+===============================================
+USER
+镜像用什么用户运行
+USER uid
+USER uid:gid
+USER uid:group
+
+不指定会使用root
+===============================================
+ONBUILD
+一个镜像被当做基础镜像时候，会在子镜像在构建过程中出入指令
+
+cd onbuild
+docker build  -t  wcybxzj/mynginx:v1 .
+docker run -p 1234:80 --name web1 -itd --rm  wcybxzj/mynginx:v1
+[root@localhost onbuild]# elinks --dump http://127.0.0.1:1234
+   simple static page
+看到v1中的 Dockerfile中的 ONBUILD 没有被触发
+
+cd onbuild2
+docker build  -t  wcybxzj/mynginx:v2 .
+docker run -p 1234:80 --name web1 -itd --rm  wcybxzj/mynginx:v2
+[root@localhost onbuild2]# elinks --dump http://127.0.0.1:1234
+   this is frrom CPOY command index.html
+
+看到v1中的 Dockerfile中的 ONBUILD 在子镜像被触发执行了
+===============================================

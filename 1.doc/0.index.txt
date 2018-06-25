@@ -1,0 +1,184 @@
+宿主:
+kvm不要用链接克隆直接克隆,但我用了没问题
+也可以用vmware或者真机更简单
+给最少2G内存到docker的宿主
+
+=================================================
+我用的2个kvm分别做docker的宿主
+192.168.122.101 docker-client.robin.com
+192.168.122.102 docker-server.robin.com
+client 对外服务
+server 实际就是镜像仓库,叫docker-repository更合适
+=================================================
+宿主创建一个docker yum
+/var/ftp/docker/docker
+=================================================
+docker-client&docker-server:
+1. update kernel
+yum -y install kernel-ml-aufs kernel-ml-aufs-devel
+reboot
+
+2.vim /etc/grub.conf:
+defualt=1
+
+3.install docker
+yum -y install docker-io
+
+4.start
+service docker start
+chkconfig docker on
+
+=================================================
+client:
+如果要直接使用172.16.8.100的源
+lftp:
+get centos-6.4-docker.tar.bz2
+docker load < centos-6.4-docker.tar.bz2 
+docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED 		VIRTUAL SIZE
+<none>              <none>              539c0211cd76        3.344931 years ago 	313.8 MB
+
+docker tag 539c0211cd76 centos64
+=================================================
+server 仓库测试:
+lftp 172.16.8.100 get registry.tar
+docker load < registry.tar
+docker images
+REPOSITORY                        TAG                 IMAGE ID 		CREATED             VIRTUAL SIZE
+dl.dockerpool.com:5000/registry   latest              8e9a29f977a7      21 months ago       427.9 MB
+docker tag dl.dockerpool.com:5000/registry registry
+
+docker run --name registry_server -d -p 5000:5000 -v /registry:/tmp/registry registry
+docker ps
+=================================================
+client:
+[root@docker-client ~]# ps -ef|grep docker
+root       959     1  0 11:58 ?        00:00:36 /usr/bin/docker -d
+
+cat /etc/sysconfig/docker
+other_args='--insecure-registry 192.168.122.102:5000'
+
+[root@docker-client ~]# ps -ef|grep docker
+root      1511     1  3 14:57 pts/0    00:00:00 /usr/bin/docker -d --insecure-registry 192.168.122.102:5000
+
+lftp 172.16.8.100 get nginx.tar
+docker load < nginx.tar
+docker tag nginx 192.168.122.102:5000/nginx
+docker rm nginx
+docker push 192.168.122.102:5000/nginx
+docker search 192.168.122.102:5000/nginx
+docker rmi 192.168.122.102:5000/nginx
+docker pull 192.168.122.102:5000/nginx
+docker tag 192.168.122.102:5000/nginx nginx
+docker run -itd nginx /bin/bash
+docker run -itd nginx /bin/bash
+docker ps -a
+CONTAINER ID  IMAGE        COMMAND      CREATED STATUS              	   PORTS               NAMES
+a11d61c62250  nginx:latest "/bin/bash"  15 minutes ago Up 15 minutes       80/tcp, 443/tcp     desperate_bar deen
+docker exec -it a11d61c62250  ls
+docker exec -it  a11d61c62250 /bin/bash
+=================================================
+docker的数据管理:
+=================================================
+Docker数据卷:
+宿主提供数据卷
+client:
+mkdir -p /web2/{html,logs}
+echo "web2" > /web2/html/index.html
+tree /web2
+
+-v:卷映射
+-p:指定本地端口映射
+client 81端口映射到docker web2 80端口
+client /web2/html 映射到docker web2 /usr/share/nginx/html 
+client /web2/logs 映射到docker web2 /var/log/nginx nginx
+docker run --name web2 -d -p 81:80 -v /web2/html:/usr/share/nginx/html -v /web2/logs:/var/log/nginx nginx
+docker exec -it web2 ls /usr/share/nginx/html
+docker exec -it web2 cat /usr/share/nginx/html/index.html
+
+client:
+curl 127.0.0.1:81
+tail -f  /web2/logs/access.log
+
+删除所有容器2种方法
+docker ps -a | grep -v 'CONTAINER' |awk '{print $1}' |xargs docker rm -f
+docker rm -f `docker ps -a -q`
+=================================================
+Docker容器卷:
+client:
+docker load < centos-6.4-docker.tar.bz2
+docker images
+centos64  latest  39c0211cd76 3.345182years ago   313.8 MB
+docker run -itd -v /dbdata --name dbdata centos64 /bin/bash
+docker exec -it  dbdata /bin/bash
+docker run -it -d --volumes-from dbdata --name web1 centos64 /bin/bash
+docker exec -it  web1 /bin/bash
+=================================================
+网络配置-端口映射:
+=================================================
+docker run -d --name web100 nginx
+docker ps
+
+-P:随机端口映射
+-v:本地路径映射到docker容器的路径
+mkdir -p /web2/html
+docker run -d -P -v /var/ftp/mnt:/var/ftp/mnt -v /web2/html:/usr/share/nginx/html --name web6 nginx
+docker exec -it  web6 /bin/bash
+
+-p:指定端口映射
+docker run -d -v /var/ftp/mnt:/var/ftp/mnt -p 192.168.122.101:80:80 --name web7 nginx
+docker run -d -v /var/ftp/mnt:/var/ftp/mnt -p 192.168.122.101::80 --name web8 nginx
+docker run -d -v /var/ftp/mnt:/var/ftp/mnt -p 100:80 --name web9 nginx
+=================================================
+网络配置-容器互联:
+client:
+docker load < mysql5-7-1.tar
+docker run -itd --name mysqldb -e MYSQL_ROOT_PASSWORD=123456  mysql /bin/bash
+docker exec mysqldb  ip a
+172.17.0.18
+docker exec -it mysqldb env
+mysql -h 172.17.0.18 -uroot -p123456
+
+docker run -d -p 80:80 -p 443:443 --name web2 --link mysqldb:mysql nginx
+docker exec -it web2 env
+=================================================
+docker创建镜像的2种方式:
+commit方式:就是把container修改后做成images再推到docker仓库
+
+=================================================
+Dockerfile方式
+client:
+
+mkdir /root/sshd_dockfile/
+touch  /root/sshd_dockfile/authorized_keys
+touch  /root/sshd_dockfile/Dockerfile
+
+vim /root/sshd_dockfile/Dockerfile
+FROM centos64:latest
+MAINTAINER docker sshd v1.0
+RUN mkdir /root/.ssh
+RUN chmod 700 /root/.ssh
+RUN rm -rf /etc/yum.repos.d/*
+RUN wget -P /etc/yum.repos.d/ http://192.168.91.11/yum.repo
+RUN yum install -y openssh-server
+RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key  
+RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
+RUN mkdir /var/run/sshd  
+RUN sed -i 's/UsePAM yes/UsePAM no/g' /etc/ssh/sshd_config
+ADD authorized_keys /root/.ssh/authorized_keys
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
+
+cd /root/sshd_dockfile
+docker build -t rhel-sshd --no-cache .
+
+docker run -d -p 2222:22 --name web1 rhel-sshd
+=================================================
+一个passwd都没有的docker容器
+ssh上去时候出现问题时候的一些解决问题的细节
+yum install -y rsyslog
+tail -f /var/log/secure
+vim /etc/sshd_config
+UsePAM yes
+rpm -qf `which getenforce`
+yum provides */genenforce

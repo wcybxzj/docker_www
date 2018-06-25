@@ -1,0 +1,42 @@
+连接容器
+
+网络端口映射
+
+下面两句效果一样都是把容器5000端口映射到
+-P:将容器EXPOSE端口随机隐身到本机随机端口
+docker run -d -P training/webapp python app.py
+
+docker run -d -p 127.0.0.1::5000 training/webapp python app.py
+
+都是将容器内的5000映射到宿主机的5000
+docker run -d -p 5000:5000 training/webapp python app.py
+docker run -d -p 0.0.0.0:5000:5000 training/webapp python app.py
+
+查看容器端口被映射到了本机的那个端口
+[root@localhost ~]# docker port zuji_php-exporter-php_order_1 8080
+0.0.0.0:11004
+================================================================================================
+Docker容器连接
+端口映射并不是唯一把docker连接到另一个容器的方法。
+docker有一个连接系统允许将多个容器连接在一起，共享连接信息。
+docker连接会创建一个父子关系，其中父容器可以看到子容器的信息。
+
+docker run -d -P --name web training/webapp python app.py
+
+sudo docker inspect -f "{{ .Name }}" 容器id
+/web
+
+容器连接
+docker run --rm -d --name db training/postgres
+
+web容器和db容器连接起来
+docker run --rm  -d -P --name web --link db:db_a training/webapp python app.py
+
+name是我们连接容器的名字，alias是link的别名。让我们看如何使用alias。
+
+可以看到web连接了db
+docker inspect web|grep db
+"/db:/web/db_a"
+
+sudo docker run --rm --name web2 --link db:db training/webapp env
+

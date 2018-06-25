@@ -1,0 +1,82 @@
+强制不使用缓存中间镜像 
+方法1:
+--no-cache
+比如RUN 中有类似 yum update之类的命令,或者为了调试
+
+cd v1
+docker build  -t  wcybxzj/mynginx:v1  --no-cache .
+Sending build context to Docker daemon  3.072kB
+Step 1/6 : FROM wcybxzj/mynginx:latest
+ ---> 8fd6d762a396
+Step 2/6 : RUN echo 123 > /tmp/1.txt
+ ---> Running in 8233ee24e66e
+Removing intermediate container 8233ee24e66e
+ ---> da96c1910bc7
+Step 3/6 : RUN echo 123 > /tmp/2.txt
+ ---> Running in cdc4c86a7af8
+Removing intermediate container cdc4c86a7af8
+ ---> 650c1ff9c7e8
+Step 4/6 : CMD ["/usr/local/nginx/sbin/nginx", "-g", "daemon off;"]
+ ---> Running in 5e76155207c1
+Removing intermediate container 5e76155207c1
+ ---> 506514094b4e
+Step 5/6 : COPY index.html /var/www/html/
+ ---> ae26b61a63b8
+Step 6/6 : EXPOSE 80
+ ---> Running in 5af77da88e8c
+Removing intermediate container 5af77da88e8c
+ ---> da485c159287
+Successfully built da485c159287
+Successfully tagged wcybxzj/mynginx:v1
+
+分析:
+step1的8fd6d762a396的是基础镜像
+每个step产生的中间container都被删除,但是中间images保留了
+中间container可以用于调试镜像
+
+
+docker run --rm -itd --name=tmp1 da96c1910bc7 /bin/bash
+[root@localhost v1]# docker attach tmp1
+[root@50064dba2b1b /]# ll /tmp/1.txt 
+-rw-r--r-- 1 root root 4 Jun 24 21:32 /tmp/1.txt
+[root@50064dba2b1b /]# ll /tmp/2.txt 
+ls: cannot access /tmp/2.txt: No such file or directory
+=======================================================================
+强制不使用缓存中间镜像 
+方法2:
+Dockerfile:中使用
+ENV REFRESH_DATE 2018-06-25
+cd env_refresh_date
+docker build  -t  wcybxzj/mynginx:env_refresh_date--no-cache .
+Sending build context to Docker daemon  3.072kB
+Step 1/7 : FROM wcybxzj/mynginx:latest
+---> 8fd6d762a396
+Step 2/7 : RUN echo 123 > /tmp/1.txt
+---> Using cache
+---> da96c1910bc7
+Step 3/7 : RUN echo 123 > /tmp/2.txt
+---> Using cache
+---> 650c1ff9c7e8
+Step 4/7 : ENV REFRESH_DATE 2018-06-25  这步之前使用缓存,这步之后不是缓存
+---> Running in 0b906b083171
+Removing intermediate container 0b906b083171
+---> de415242f9db
+Step 5/7 : CMD ["/usr/local/nginx/sbin/nginx", "-g", "daemon off;"]
+---> Running in 976cc3f0c833
+Removing intermediate container 976cc3f0c833
+---> 939b90929af6
+Step 6/7 : COPY index.html /var/www/html/
+---> 711cf70eb897
+Step 7/7 : EXPOSE 80
+---> Running in f6a3e8fde2f7
+Removing intermediate container f6a3e8fde2f7
+---> 61f63e5c4091
+Successfully built 61f63e5c4091
+
+
+
+=======================================================================
+
+查看镜像构造过程
+docker history wcybxzj/mynginx:v1
+

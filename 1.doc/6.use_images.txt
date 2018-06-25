@@ -1,0 +1,51 @@
+docker commit创建自己的镜像
+
+1.拖取镜像(Pull our image)
+docker pull training/sinatra
+
+2.运行一个带tag的镜像
+docker run -t -i 镜像名:标签 /bin/bash
+
+3.启动容器,名称随机 内容进行修改
+[root@localhost docker_www]# docker run -t -i training/sinatra /bin/bash
+root@c6a48eb44315:/# echo 123 > ybx.txt
+root@c6a48eb44315:/# cat ybx.txt
+123
+
+4.更新并且提交更改
+sudo docker commit -m="Added json gem" -a="Kate Smith" \
+c6a48eb44315 ouruser/sinatra:v2
+
+-m 标识我们指定提交的信息，就像你提交一个版本控制。
+-a 标识允许作者。
+
+5.使用自己的镜像创建容器
+docker run -t -i ouruser/sinatra:v2 /bin/bash
+root@9dbb9e71dbef:/# cat ybx.txt
+123
+
+==================================================================================
+docker build+Dockerfile构建镜像
+使用 docker commit 命令能够非常简单的扩展镜像。
+但是它有点麻烦，并且在一个团队中也不能够轻易的共享它的开发过程。
+为解决这个问题，我们使用一个新的命令 docker build ， 从零开始来创建一个新的镜像。
+
+我们需要创建一个 Dockerfile 文件，其中包含一组指令来告诉 Docker 如何构建我们的镜像。
+现在创建一个目录，并且创建一个 Dockerfile
+
+mkdir sinatra
+cd sinatra
+touch Dockerfile
+
+vim Dockerfile:
+# This is a comment
+FROM ubuntu:14.04
+MAINTAINER ybx <123213@adqsd.com>
+RUN apt-get update && apt-get install -y ruby ruby-dev
+RUN gem install sinatra
+
+docker build -t ouruser/sinatra:v3 .
+-t 标识(flag)来标示属于 ouruser ，镜像名称为 sinatra,标签是 v3。
+
+docker run -t -i ouruser/sinatra:v3 /bin/bash
+
