@@ -2,15 +2,14 @@
 拒绝容器互联:
 允许特定容器互联:
 ==============================================================
+测试1:
 允许所有容器互联:允许所有容器互联:同宿主默认可以用docker0互联
 容器重启后有可能ip变更,docker run 要使用link选项来解决这个问题
 docker run --link=容器名:别名 镜像 命令
 
-docker run -p 0.0.0.0:1234:80  --name web  -itd centos /bin/bash
-docker run -it  --name cct1  --link=web:web_alias centos
-
-[root@localhost ~]# docker  run -it  --name cct1  --link=web:web_alias centos
-[root@c9ab0535625c /]# ping web_alias
+docker run --rm -p 0.0.0.0:1234:80  --name web  -itd centos /bin/bash
+docker run --rm -it  --name cct1  --link=web:web_alias centos
+ping web_alias
 PING web_alias (172.26.0.2) 56(84) bytes of data.
 64 bytes from web_alias (172.26.0.2): icmp_seq=1 ttl=64 time=0.693 ms
 64 bytes from web_alias (172.26.0.2): icmp_seq=2 ttl=64 time=0.215 ms
@@ -18,10 +17,37 @@ PING web_alias (172.26.0.2) 56(84) bytes of data.
 env 看环境
 vim /etc/hosts 看hosts
 ==============================================================
-拒绝容器互联:/etc/daemon.json --icc:false (没测试)
+测试2:还是上边的例子这次同主机两个container不能通信
+拒绝容器互联:
+vim /etc/daemon.json
+{
+	"registry-mirrors": ["https://www.daocloud.io"],
+	"debug": true,
+	"hosts": ["unix:///var/run/docker.sock","tcp://0.0.0.0:2375"],
+	"labels": ["name=docker_one"],
+	"icc": false
+}  
+service docker restart
+icc:false 不允许容器互相访问,除非run时候加--link
 ==============================================================
+测试3:
 允许特定容器互联:
-/etc/daemon.json --icc:false --iptables=true (没测试)
+vim /etc/daemon.json
+{
+	"registry-mirrors": ["https://www.daocloud.io"],
+	"debug": true,
+	"hosts": ["unix:///var/run/docker.sock","tcp://0.0.0.0:2375"],
+	"labels": ["name=docker_one"],
+	"icc": false,
+	"iptables":true
+}  
+service docker restart
+iptables:是说是否允许docker去写宿主的iptables
+
+docker run --rm -p 0.0.0.0:1234:80  --name mynginx -itd  nginx
+docker run --rm -it  --name cct1  --link=mygninx:nginx_alias nginx
+
+
 docker run --link=xxx:yyy
 --iptables:把你的配置写入到宿主的iptables
 ==============================================================
