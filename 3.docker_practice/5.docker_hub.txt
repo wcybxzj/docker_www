@@ -1,0 +1,22 @@
+1.搭建私有registry,并且在本机测试push
+pc1:192.168.1.123
+docker run -d -p 5000:5000 --restart always --name registry  -v /data/docker_registry/data:/var/lib/registry registry:2
+docker tag ubuntu localhost:5000/ubuntu
+docker push localhost:5000/ubuntu 成功
+=================================================================================
+2.向私有reigstry push 镜像
+pc2:192.168.1.124
+vim /etc/docker/daemon.json
+{
+  "registry-mirrors": ["https://registry.docker-cn.com"],
+  "selinux-enabled": true,
+  "insecure-registries": ["192.168.1.123:5000"],
+  "debug": true
+}
+docker tag  nginx 192.168.1.123:5000/nginx
+docker push  192.168.1.123:5000/nginx 成功
+=================================================================================
+3.从私有reigstry pull 镜像
+pc2:192.168.1.124
+docker rmi 192.168.1.123:5000/nginx
+docker pull 192.168.1.123:5000/nginx 成功
