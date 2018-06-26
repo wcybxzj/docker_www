@@ -1,0 +1,54 @@
+管理数据的方式有2种:数据卷和数据卷容器
+
+数据卷:
+
+1.容器内创建数据卷
+docker run -d -P --rm --name web -v /webapp training/webapp python app.py
+docker exec  web ls -d  /webapp
+docker stop web
+=============================================================================
+2.挂在一个主机目录成为数据(推荐)
+docker stop web
+docker run -d -P --rm --name web -v /src/webapp:/webapp training/webapp python app.py
+docker exec  web ls -d  /webapp
+docker stop web
+=============================================================================
+3.挂在一个主机文件作为数据卷(不推荐)
+docker run -d -P --rm --name web -v ~/.bash_history:/.bash_history training/webapp python app.py
+docker exec -it web /bin/bash
+docker stop web
+
+=============================================================================
+=============================================================================
+=============================================================================
+数据卷容器:
+terminal1:
+docker run -it -P --rm --name dbdata -v /dbdata centos
+
+启动两个db使用dbdata数据卷:
+terminal2:
+docker run -it -P --rm --name db1 --volumes-from dbdata centos
+
+terminal3:
+docker run -it -P --rm --name db2 --volumes-from dbdata centos
+
+使用挂载了数据卷:
+docker run -it -P --rm --name db3 --volumes-from db1 centos
+
+备份:
+docker run --volumes-from dbdata -v $(pwd):/backup --name worker centos tar cvf /backup/backup.tar /dbdata
+
+恢复:
+先创建一个数据卷容器
+docker run -it -v /dbdata --name dbdata2 centos /bin/bash
+
+使用备份的tar
+docker run --volumes-from dbdata2 -v $(pwd):/backup centos tar xvf /backup/backup.tar
+
+docker exec -it dbdata2 cat /dbdata/123.txt
+123
+
+
+
+
+
