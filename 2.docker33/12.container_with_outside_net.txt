@@ -1,2 +1,51 @@
+cenot7开启路由功能
 sysctl net.ipv4.conf.all.forwarding
-111
+=================================================
+实验:使用iptables阻止pc2对pc1中容器的tcp+port是1234的访问
+pc1:192.168.91.15
+pc2:192.168.91.16
+pc3:192.168.91.11
+
+pc1:启动nginx容器
+docker run -itd  -p 1234:80  --rm --name nginx1 wcybxzj/mynginx:v1
+
+pc2:访问正常
+elinks --dump 192.168.91.15:1234
+   this is frrom CPOY command index.html
+
+pc3:访问正常
+elinks --dump 192.168.91.15:1234
+   this is frrom CPOY command index.html
+
+pc1:
+iptables -L -n
+Chain DOCKER-USER (1 references)
+   target     prot opt source               destination
+   RETURN     all  --  0.0.0.0/0            0.0.0.0/0
+
+Chain DOCKER-USER (1 references)
+target     prot opt source               destination
+RETURN     all  --  0.0.0.0/0            0.0.0.0/0
+
+ip a
+   ens33:192.168.91.15/24
+
+docker inspect nginx1 |grep IPAddress
+   "IPAddress": "172.26.0.2",
+
+pc1:
+对FORWARD链进行操作,DOCKER-USER是其中第一个子链所以操作它即可
+iptables -I DOCKER-USER  -s 192.168.91.16 -d 172.26.0.2 -i ens33 -p TCP --dport 80 -j DROP
+
+iptables -L -n
+Chain DOCKER-USER (1 references)
+target     prot opt source               destination
+DROP       tcp  --  192.168.91.16        172.26.0.2          tcp dpt:80
+RETURN     all  --  0.0.0.0/0            0.0.0.0/0
+
+pc2:访问失败
+elinks --dump 192.168.91.15:1234
+
+pc3:访问正常
+elinks --dump 192.168.91.15:1234
+   this is frrom CPOY command index.html

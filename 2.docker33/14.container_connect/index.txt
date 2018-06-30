@@ -1,0 +1,7 @@
+跨主机容器互联有3种方法
+
+1.使用Docker自带的docker0网桥:缺点是慢
+2.Open vshift:
+3.Weave:
+
+

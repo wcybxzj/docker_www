@@ -1,0 +1,12 @@
+数据卷:
+直接docker run -v 本地位置:容器位置
+docker run -itd -v ~/container_data:/data       --rm --name centos1 centos  /bin/bash
+docker run -tid -v ~/container_data1:/data1:ro  --rm --name centos2 centos  /bin/bash
+
+docker inspect centos1
+docker inspect centos2
+
+========================================================================
+
+数据容器:(略)
+
