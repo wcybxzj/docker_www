@@ -1,0 +1,85 @@
+pc1:192.168.91.15
+pc2:192.168.91.16
+==============================================================
+
+1.两台宿主都要创建br0网桥,把原来的网卡设置放入br0
+这里只写了pc1的,pc2基本一样
+cat /etc/sysconfig/network-scripts/ifcfg-br0
+DEVICE=br0
+TYPE=Bridge
+BOOTRPOTO=static
+IPADDR=192.168.91.15
+PREFIX=24
+GATEWAY=192.168.91.2
+ONBOOT=yes
+DNS1=180.76.76.76
+
+cat /etc/sysconfig/network-scripts/ifcfg-ens33
+NAME=ens33
+DEVICE=ens33
+ONBOOT=yes
+BRIDGE=br0
+
+service network restart
+
+ip a
+2: ens33: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel master br0 state UP group default qlen 1000
+link/ether 00:0c:29:71:2e:e0 brd ff:ff:ff:ff:ff:ff
+
+18: br0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+link/ether 00:0c:29:71:2e:e0 brd ff:ff:ff:ff:ff:ff
+inet 192.168.91.15/24 brd 192.168.91.255 scope global noprefixroute br0
+valid_lft forever preferred_lft forever
+inet6 fe80::20c:29ff:fe71:2ee0/64 scope link
+valid_lft forever preferred_lft forever
+
+==============================================================
+2.两台宿主的对外网卡连接到br0,两台这个配置基本完全一样
+pc1:
+[root@localhost ~]# cat  /etc/docker/daemon.json
+{
+"registry-mirrors": ["https://www.daocloud.io"],
+"debug": true,
+"hosts": ["unix:///var/run/docker.sock","tcp://0.0.0.0:2375"],
+"labels": ["name=docker_one"],
+"icc": false,
+"iptables": true,
+"bridge": "br0",
+"fixed-cidr": "192.168.91.0/24"
+}
+
+pc2:
+[root@localhost ~]# cat  /etc/docker/daemon.json
+{
+"registry-mirrors": ["https://www.daocloud.io"],
+"debug":true,
+"hosts": ["unix:///var/run/docker.sock","tcp://0.0.0.0:2375"],
+"labels":["name=docker_two"],
+"icc": false,
+"iptables": true,
+"bridge": "br0",
+"fixed-cidr": "192.168.91.0/24"
+}
+==============================================================
+3.测试
+pc1:
+docker run -itd --rm --name mynginx_pc1 nginx /bin/bash
+
+pc2:
+docker run -itd --rm --name mynginx_pc2 nginx /bin/bash
+
+pc1:
+docker inspect mynginx_pc1|grep IPAddress
+            "SecondaryIPAddresses": null,
+            "IPAddress": "192.168.91.1",
+                    "IPAddress": "192.168.91.1",
+
+pc2:
+[root@localhost ~]# docker inspect mynginx_pc2|grep IPAddress
+            "SecondaryIPAddresses": null,
+            "IPAddress": "192.168.91.1",
+                    "IPAddress": "192.168.91.1",
+
+
+
+pc1和pc2都分配了192.168.91.1 实验没法做了~~~

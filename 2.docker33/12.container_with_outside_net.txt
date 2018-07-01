@@ -1,5 +1,5 @@
 cenot7开启路由功能
-sysctl net.ipv4.conf.all.forwarding
+sysctl net.ipv4.conf.all.forwarding=1
 =================================================
 实验:使用iptables阻止pc2对pc1中容器的tcp+port是1234的访问
 pc1:192.168.91.15
