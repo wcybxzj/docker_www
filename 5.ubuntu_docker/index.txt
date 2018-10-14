@@ -31,8 +31,3 @@ docker run -it alpine sh
 docker run --name my_nginx -d -p 80:80 nginx
 
 docker logs contianer-name
-
-
-8.先切daocloud 下载docker-compose
-chmod +x /usr/local/bin/docker-compose
-
