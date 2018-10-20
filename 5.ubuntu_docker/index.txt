@@ -2,6 +2,7 @@ http://get.daocloud.io/
 ===================================ubunutu docker===================================================
 https://linuxconfig.org/how-to-install-docker-on-ubuntu-18-04-bionic-beaver
 1.
+apt upgrade
 apt update
 apt install apt-transport-https ca-certificates curl software-properties-common
 
@@ -14,11 +15,11 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
 
 4.
-sudo apt update
+apt update
 
 
 5.
-sudo apt install docker-ce
+apt install docker-ce
 
 6.
 docker --version
