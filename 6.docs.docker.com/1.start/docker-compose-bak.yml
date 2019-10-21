@@ -1,0 +1,24 @@
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/code
+    environment:
+      FLASK_ENV: development
+    #network_mode: bridge
+    networks:
+      - default123
+    links:
+      - "redis:redis-db"
+
+  redis:
+    image: "redis:alpine"
+    #network_mode: bridge
+    networks:
+      - default123
+
+networks:
+  default123:

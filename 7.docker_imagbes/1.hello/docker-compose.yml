@@ -1,0 +1,18 @@
+version: '2.2'
+
+services:
+
+  helloworld:
+    image: reg-docker-dp.nqyong.com/zuji/helloworld:v2
+    volumes:
+      - ./tmp :/tmp
+    networks:
+      - elk
+    security_opt:
+      - seccomp:unconfined
+
+networks:
+
+  elk:
+    driver: bridge
+    external: true

@@ -1,0 +1,2 @@
+主要测试下
+CMD和ENTRYPOINT
