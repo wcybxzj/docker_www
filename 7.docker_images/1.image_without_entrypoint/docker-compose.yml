@@ -1,0 +1,21 @@
+version: '2.2'
+
+services:
+
+  helloworld:
+    image: reg-docker-dp.nqyong.com/zuji/helloworld:v2
+    volumes:
+      - ./tmp :/tmp
+    networks:
+      - elk
+    security_opt:
+      - seccomp:unconfined
+
+    #这里的command可以覆盖掉Dockerfile中的CMD
+    command: 33 44
+
+networks:
+
+  elk:
+    driver: bridge
+    external: true

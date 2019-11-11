@@ -1,0 +1,2 @@
+FROM redis
+MAINTAINER Alex Yang <87212426@10ln.com>

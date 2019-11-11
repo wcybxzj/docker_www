@@ -11,6 +11,9 @@ services:
     security_opt:
       - seccomp:unconfined
 
+    #这里的command可以覆盖掉Dockerfile中的CMD
+    command: 33 44
+
 networks:
 
   elk:
